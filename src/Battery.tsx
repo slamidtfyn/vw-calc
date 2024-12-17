@@ -1,52 +1,81 @@
 import * as React from 'react'
-import {Box, TextField} from "@mui/material";
+import {useEffect} from 'react'
+import {Box, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent, TextField} from "@mui/material";
 
-function Battery(props : {targetSoc: number, batteryKwh: number, name: string}) {
+type IBil = 'ID' | 'UP';
+
+function Battery() {
     const [soc, setSoc] = React.useState(40);
-    const [targetSoc, setTargetSoc] = React.useState(props.targetSoc);
+    const [targetSoc, setTargetSoc] = React.useState(80);
+    const [bil, setBil] = React.useState<IBil>('ID');
 
+    const bilData: { targetSoc: number, batteryKwh: number } = React.useMemo(() => {
+        switch (bil) {
+            case "ID":
+                return {targetSoc: 80, batteryKwh: 77};
+
+            case "UP":
+                return {targetSoc: 100, batteryKwh: 37};
+
+        }
+    }, [bil])
 
     const kwh = React.useMemo(() => {
-        const target = targetSoc * props.batteryKwh / 100;
+        const target = targetSoc * bilData.batteryKwh / 100;
         return Math.ceil(target - target * soc / 100);
 
-    }, [soc, props.batteryKwh, targetSoc]);
+    }, [soc, bilData.batteryKwh, targetSoc]);
+
+    const handleChange = (event: SelectChangeEvent) => {
+        setBil(event.target.value as IBil);
+    };
+
+    useEffect(
+        () => {
+            setTargetSoc(bilData.targetSoc);
+        },
+        [bilData.targetSoc])
 
     return (
         <Box sx={{
             display: 'flex',
             flexDirection: 'column',
-            gap:2
+            gap: 2
         }}>
-            <h2>{props.name}</h2>
-                <Box>
-                    <TextField disabled={true}
-                        value={props.batteryKwh}
-                        label="Batteri kwh" variant="outlined" />
+            <Box>
+                <FormControl sx={{'width': '100%'}} variant="outlined">
+                    <InputLabel id="demo-simple-select-label">Bil</InputLabel>
+                    <Select
+                        value={bil}
+                        onChange={handleChange}>
+                        <MenuItem key={'ID'} value={'ID'}>ID</MenuItem>
+                        <MenuItem key={'UP'} value={'UP'}>UP</MenuItem>
+                    </Select>
+                </FormControl>
 
-                </Box>
-                <Box>
-                    <TextField
-                        value={targetSoc} tabIndex={1}
-                        label="Mål SoC %" variant="outlined"
-                        onChange={(e) =>
-                            setTargetSoc(Number(e.target.value))}/>
+            </Box>
+            <Box>
+                <TextField
+                    value={targetSoc}
+                    label="Mål SoC %" variant="outlined"
+                    onChange={(e) =>
+                        setTargetSoc(Number(e.target.value))}/>
 
-                </Box>
-                <Box>
-                    <TextField
-                        id="outlined-basic" tabIndex={0}
-                        label="nuværende SoC %"
-                        variant="outlined" value={soc}
-                        onChange={(e) =>
-                            setSoc(Number(e.target.value))}/>
-                </Box>
-                <Box>
-                    <TextField
-                        value={kwh} aria-readonly={true} disabled={true}
-                        label="Kwh mangler" variant="outlined"
-                    />
-                </Box>
+            </Box>
+            <Box>
+                <TextField
+                    id="outlined-basic"
+                    label="nuværende SoC %"
+                    variant="outlined" value={soc}
+                    onChange={(e) =>
+                        setSoc(Number(e.target.value))}/>
+            </Box>
+            <Box>
+                <TextField
+                    value={kwh} aria-readonly={true} disabled={true}
+                    label="Kwh mangler" variant="outlined"
+                />
+            </Box>
         </Box>
     )
 }
